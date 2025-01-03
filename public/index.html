@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Financeiro</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard Financeiro</h1>
+        
+        <div class="summary-cards">
+            <div class="card">
+                <h3>Salas Criadas</h3>
+                <p id="totalVendas">0</p>
+            </div>
+            <div class="card">
+                <h3>Lucro Total (Com Custo)</h3>
+                <p id="lucroTotal">R$ 0,00</p>
+            </div>
+            <div class="card">
+                <h3>Custo Total</h3>
+                <p id="custoTotal">R$ 0,00</p>
+            </div>
+            <div class="card">
+                <h3>Lucro Total (Sem Custo)</h3>
+                <p id="lucroTotalSemCusto">R$ 0,00</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">MÉTRICAS</h2>
+        <div class="charts-grid">
+            <div class="chart-box">
+                <canvas id="lineChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <canvas id="scatterChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <script>
+        // URL da API
+        const apiUrl = '/api/dados';
+
+        // Dados de custo
+        const custoPorSala = 0.9;
+
+        // Função para carregar os dados da API
+        async function carregarDados() {
+            try {
+                const response = await fetch(apiUrl);
+                const dados = await response.json();
+
+                // Calculando valores
+                const totalSalas = dados.length;
+                const custoTotal = totalSalas * custoPorSala;
+                const lucroTotal = dados.reduce((total, item) => total + item.valor, 0);
+                const lucroTotalComCusto = lucroTotal - custoTotal;  // Lucro com custo
+                const lucroSemCusto = lucroTotal;  // Sem considerar o custo
+
+                // Atualizando os valores na página
+                document.getElementById('totalVendas').textContent = totalSalas;
+                document.getElementById('lucroTotal').textContent = `R$ ${lucroTotalComCusto.toFixed(2)}`;
+                document.getElementById('custoTotal').textContent = `R$ ${custoTotal.toFixed(2)}`;
+                document.getElementById('lucroTotalSemCusto').textContent = `R$ ${lucroSemCusto.toFixed(2)}`;
+
+                // Atualizar gráficos
+                atualizarLineChart(dados.map(d => d.valor));
+                atualizarScatterChart(dados.map(d => d.valor));
+                atualizarPieChart(dados.map(d => d.valor));
+            } catch (error) {
+                console.error('Erro ao carregar os dados:', error);
+            }
+        }
+
+        // Função para atualizar o gráfico de linha
+        function atualizarLineChart(data) {
+            const ctx = document.getElementById('lineChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map((_, i) => `Sala ${i + 1}`),
+                    datasets: [{
+                        label: 'Lucro por Sala',
+                        data: data,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                        },
+                        tooltip: {
+                            enabled: true,
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para atualizar o gráfico de dispersão (scatter)
+        function atualizarScatterChart(data) {
+            const ctx = document.getElementById('scatterChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Lucro por Sala',
+                        data: data.map((valor, index) => ({ x: index + 1, y: valor })),
+                        backgroundColor: 'rgba(255, 99, 132, 1)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                        },
+                        tooltip: {
+                            enabled: true,
+                        }
+                    }
+                }
+            });
+        }
+
+        // Função para atualizar o gráfico de pizza (pie)
+        function atualizarPieChart(data) {
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.map((_, i) => `Sala ${i + 1}`),
+                    datasets: [{
+                        label: 'Lucro por Sala',
+                        data: data,
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(255, 159, 64, 0.2)',
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(54, 162, 235, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(54, 162, 235, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                        },
+                        tooltip: {
+                            enabled: true,
+                        }
+                    }
+                }
+            });
+        }
+
+        // Carregar os dados ao iniciar a página
+        carregarDados();
+    </script>
+</body>
+</html>
