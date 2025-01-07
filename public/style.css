@@ -20,7 +20,7 @@ body {
 h1 {
     text-align: center;
     margin-bottom: 30px;
-    color: #00ff88;
+    color: #ff0000;
     font-size: 2.5em;
     text-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
     animation: glow 2s ease-in-out infinite alternate;
